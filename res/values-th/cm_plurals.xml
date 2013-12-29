@@ -15,21 +15,16 @@
      limitations under the License.
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <plurals name="hour">
-        <item quantity="one">%d hr</item>
-        <item quantity="other">%d hrs</item>
-    </plurals>
-    <plurals name="minute">
-        <item quantity="one">%d min</item>
-        <item quantity="other">%d mins</item>
-    </plurals>
-    <plurals name="second">
-        <item quantity="one">%d sec</item>
-        <item quantity="other">%d secs</item>
-    </plurals>
-
-    <plurals name="call">
-        <item quantity="one">%d call</item>
-        <item quantity="other">%d calls</item>
-    </plurals>
+  <plurals name="hour">
+    <item quantity="other">%d ชั่วโมง</item>
+  </plurals>
+  <plurals name="minute">
+    <item quantity="other">%d นาที</item>
+  </plurals>
+  <plurals name="second">
+    <item quantity="other">%d วินาที</item>
+  </plurals>
+  <plurals name="call">
+    <item quantity="other">%d สาย</item>
+  </plurals>
 </resources>
