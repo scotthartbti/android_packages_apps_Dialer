@@ -17,17 +17,22 @@
 package com.android.dialer;
 
 import android.app.Activity;
+import android.app.LoaderManager.LoaderCallbacks;
 import android.content.Context;
 import android.content.Intent;
+import android.content.Loader;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.provider.Contacts.Intents.Insert;
+import android.os.Bundle;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.ContactsContract.Contacts;
+import android.provider.ContactsContract.DisplayNameSources;
+import android.provider.ContactsContract.Intents.Insert;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -47,12 +52,15 @@ import com.android.contacts.common.model.Contact;
 import com.android.contacts.common.model.ContactLoader;
 import com.android.contacts.common.format.FormatUtils;
 import com.android.contacts.common.util.Constants;
+import com.android.contacts.common.util.UriUtils;
 import com.android.dialer.calllog.PhoneNumberHelper;
 import com.android.dialer.calllog.PhoneNumberUtilsWrapper;
 
 import android.provider.ContactsContract.DisplayNameSources;
 
 public class CallDetailHeader {
+    private static final String TAG = "CallDetailHeader";
+
     private static final int LOADER_ID = 0;
     private static final String BUNDLE_CONTACT_URI_EXTRA = "contact_uri_extra";
 
@@ -195,6 +203,35 @@ public class CallDetailHeader {
         }
     }
 
+    private final LoaderCallbacks<Contact> mLoaderCallbacks = new LoaderCallbacks<Contact>() {
+        @Override
+        public void onLoaderReset(Loader<Contact> loader) {
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Contact> loader, Contact data) {
+            final Intent intent = new Intent(Intent.ACTION_INSERT_OR_EDIT);
+            intent.setType(Contacts.CONTENT_ITEM_TYPE);
+            if (data.getDisplayNameSource() >= DisplayNameSources.ORGANIZATION) {
+                intent.putExtra(Insert.NAME, data.getDisplayName());
+            }
+            intent.putExtra(Insert.DATA, data.getContentValues());
+            bindContactPhotoAction(intent, R.drawable.ic_add_contact_holo_dark,
+                    mResources.getString(R.string.description_add_contact));
+        }
+
+        @Override
+        public Loader<Contact> onCreateLoader(int id, Bundle args) {
+            final Uri contactUri = args.getParcelable(BUNDLE_CONTACT_URI_EXTRA);
+            if (contactUri == null) {
+                Log.wtf(TAG, "No contact lookup uri provided.");
+            }
+            return new ContactLoader(mActivity, contactUri,
+                    false /* loadGroupMetaData */, false /* loadInvitableAccountTypes */,
+                    false /* postViewNotification */, true /* computeFormattedPhoneNumber */);
+        }
+    };
+
     public void updateViews(String number, int numberPresentation, Data data) {
         // Cache the details about the phone number.
         final PhoneNumberUtilsWrapper phoneUtils = new PhoneNumberUtilsWrapper();
@@ -223,7 +260,17 @@ public class CallDetailHeader {
             nameOrNumber = dataNumber;
         }
 
-        if (contactUri != null) {
+        if (UriUtils.isEncodedContactUri(contactUri)) {
+            // If this is a json encoded URI, there is no local contact
+            // so give the user the ability to add it as new contact.
+            final Bundle bundle = new Bundle(1);
+            bundle.putParcelable(BUNDLE_CONTACT_URI_EXTRA, contactUri);
+            mActivity.getLoaderManager().initLoader(LOADER_ID, bundle, mLoaderCallbacks);
+            mainActionIntent = null;
+            mainActionIcon = R.drawable.ic_add_contact_holo_dark;
+            mainActionDescription = mResources.getString(R.string.description_add_contact);
+            skipBind = true;
+        } else if (contactUri != null) {
             mainActionIntent = new Intent(Intent.ACTION_VIEW, contactUri);
             // This will launch People's detail contact screen, so we probably want to
             // treat it as a separate People task.
