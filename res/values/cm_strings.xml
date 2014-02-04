@@ -70,4 +70,6 @@
     <string name="dialpad_star_2_letters" translatable="false"></string>
     <string name="dialpad_pound_2_letters" translatable="false"></string>
 
+    <!-- Forward lookup -->
+    <string name="nearby_places">Nearby places</string>
 </resources>
