@@ -138,7 +138,7 @@ public class MultiSensorManager {
         Sensor proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         Sensor acceleroMeter = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         Sensor magneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        if (proximitySensor == null && acceleroMeter == null && magneticSensor == null) {
+        if (proximitySensor == null || acceleroMeter == null || magneticSensor == null) {
             mMultiSensorListener = null;
         } else {
             mMultiSensorListener =
