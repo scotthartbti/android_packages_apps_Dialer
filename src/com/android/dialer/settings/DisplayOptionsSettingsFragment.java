@@ -33,6 +33,7 @@ public class DisplayOptionsSettingsFragment extends PreferenceFragment
         implements Preference.OnPreferenceChangeListener {
 
     private static final String BUTTON_T9_SEARCH_INPUT_LOCALE = "button_t9_search_input";
+    public static final String BUTTON_SMART_MUTE_KEY = "button_smart_mute";
 
     private ListPreference mT9SearchInputLocale;
     private Context mContext;

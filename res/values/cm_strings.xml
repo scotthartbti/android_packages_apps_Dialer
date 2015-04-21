@@ -68,4 +68,10 @@
     <string name="incall_vibrate_hangup_title">Vibrate on hang up</string>
     <string name="incall_vibrate_45_title">Vibrate every minute</string>
     <string name="incall_vibrate_45_summary">Vibrates at the 45 second mark of every minute during outgoing calls</string>
+
+    <!-- Smart Options -->
+    <string name="smart_category_title">Smart options</string>
+    <string name="smart_mute_title">Smart mute</string>
+    <string name="smart_mute_summary">Mute the incoming call by flipping the device</string>
+
 </resources>
