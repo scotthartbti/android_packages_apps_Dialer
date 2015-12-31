@@ -18,21 +18,17 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <com.android.contacts.common.preference.SortOrderPreference
-        android:key="sortOrder"
-        android:title="@string/display_options_sort_list_by"
-        android:dialogTitle="@string/display_options_sort_list_by" />
+    <PreferenceCategory
+        android:key="dialer_general_smart_category_key"
+        android:title="@string/smart_category_title"
+        android:persistent="false">
 
-    <com.android.contacts.common.preference.DisplayOrderPreference
-        android:key="displayOrder"
-        android:title="@string/display_options_view_names_as"
-        android:dialogTitle="@string/display_options_view_names_as" />
+        <SwitchPreference
+            android:key="button_smart_mute"
+            android:title="@string/smart_mute_title"
+            android:summary="@string/smart_mute_summary"
+            android:defaultValue="false" />
 
-    <ListPreference
-        android:key="button_t9_search_input"
-        android:title="@string/t9_search_input_locale"
-        android:summary="%s"
-        android:defaultValue=""
-        android:persistent="false" />
+    </PreferenceCategory>
 
 </PreferenceScreen>

@@ -102,6 +102,12 @@ public class DialerSettingsActivity extends PreferenceActivity {
             speedDialHeader.titleRes = R.string.speed_dial_settings;
             speedDialHeader.intent = speedDialIntent;
             target.add(speedDialHeader);
+
+            Header smartOptionsHeader = new Header();
+            smartOptionsHeader.titleRes = R.string.smart_options_title;
+            smartOptionsHeader.fragment = SmartOptionsSettingsFragment.class.getName();
+            target.add(smartOptionsHeader);
+
         }
     }
 
