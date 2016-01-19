@@ -133,18 +133,18 @@ public class LookupProvider extends ContentProvider {
         switch (match) {
         case NEARBY:
         case PEOPLE:
-            if (match == NEARBY && !PermissionsUtil.hasLocationPermissions(getContext())) {
+            if (!PermissionsUtil.hasLocationPermissions(getContext())) {
                 Log.v(TAG, "Location permission is missing, ignoring query.");
                 return null;
             }
 
-            if (match == NEARBY && !isLocationEnabled()) {
+            if (!isLocationEnabled()) {
                 Log.v(TAG, "Location settings is disabled, ignoring query.");
                 return null;
             }
 
             final Location lastLocation = getLastLocation();
-            if (match == NEARBY && lastLocation == null) {
+            if (lastLocation == null) {
                 Log.v(TAG, "No location available, ignoring query.");
                 return null;
             }
