@@ -63,7 +63,6 @@ import com.android.dialer.util.DialerUtils;
 import com.android.dialer.util.IntentUtil;
 import com.android.dialer.util.PhoneNumberUtil;
 import com.android.dialer.util.TelecomUtil;
-import com.android.services.callrecorder.CallRecordingDataStore;
 
 import java.util.List;
 
@@ -160,8 +159,8 @@ public class CallDetailActivity extends Activity
             invalidateOptionsMenu();
 
             ListView historyList = (ListView) findViewById(R.id.history);
-            historyList.setAdapter(new CallDetailHistoryAdapter(mContext, mInflater,
-                        mCallTypeHelper, details, mCallRecordingDataStore));
+            historyList.setAdapter(
+                    new CallDetailHistoryAdapter(mContext, mInflater, mCallTypeHelper, details));
 
             String lookupKey = contactUri == null ? null
                     : UriUtils.getLookupKeyFromUri(contactUri);
@@ -227,8 +226,6 @@ public class CallDetailActivity extends Activity
     private boolean mHasEditNumberBeforeCallOption;
     private boolean mHasReportMenuOption;
 
-    private CallRecordingDataStore mCallRecordingDataStore = new CallRecordingDataStore();
-
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -267,12 +264,6 @@ public class CallDetailActivity extends Activity
         if (getIntent().getBooleanExtra(EXTRA_FROM_NOTIFICATION, false)) {
             closeSystemDialogs();
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mCallRecordingDataStore.close();
     }
 
     @Override
