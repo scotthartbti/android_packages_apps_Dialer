@@ -86,4 +86,7 @@
         <item>"1"</item>
     </string-array>
 
+    <string-array name="oem_specific_code" translatable="false">
+    </string-array>
+
 </resources>
