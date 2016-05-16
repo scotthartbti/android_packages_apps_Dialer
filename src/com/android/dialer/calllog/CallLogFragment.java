@@ -54,6 +54,8 @@ import com.cyanogen.ambient.common.api.ResultCallback;
 import com.cyanogen.ambient.deeplink.DeepLink;
 import com.cyanogen.ambient.deeplink.applicationtype.DeepLinkApplicationType;
 import com.cyanogen.ambient.incall.CallLogConstants;
+import com.cyanogen.lookup.phonenumber.contract.LookupProvider;
+import com.cyanogen.lookup.phonenumber.provider.LookupProviderImpl;
 
 import java.util.HashMap;
 
@@ -63,7 +65,7 @@ import java.util.HashMap;
  */
 public class CallLogFragment extends Fragment implements CallLogQueryHandler.Listener,
         CallLogAdapter.CallFetcher, OnEmptyViewActionButtonClickedListener,
-        BlockContactDialogFragment.Callbacks {
+        BlockContactDialogFragment.Callbacks, LookupProvider.StatusCallback {
     private static final String TAG = "CallLogFragment";
 
     /**
@@ -87,6 +89,7 @@ public class CallLogFragment extends Fragment implements CallLogQueryHandler.Lis
     private CallLogAdapter mAdapter;
     private CallLogQueryHandler mCallLogQueryHandler;
     private VoicemailPlaybackPresenter mVoicemailPlaybackPresenter;
+    private LookupProvider mLookupProvider;
     private boolean mScrollToTop;
 
     /** Whether there is at least one voicemail source installed. */
@@ -243,14 +246,15 @@ public class CallLogFragment extends Fragment implements CallLogQueryHandler.Lis
 
         mBlockContactPresenter = new BlockContactPresenter(activity, this);
         boolean isShowingRecentsTab = mLogLimit != NO_LOG_LIMIT || mDateLimit != NO_DATE_LIMIT;
+        mLookupProvider = LookupProviderImpl.INSTANCE.get(getActivity());
+        mLookupProvider.registerStatusCallback(this);
         mAdapter = ObjectFactory.newCallLogAdapter(
                 getActivity(),
                 this,
-                new ContactInfoHelper(getActivity(), currentCountryIso),
+                new ContactInfoHelper(getActivity(), currentCountryIso, mLookupProvider),
                 mVoicemailPlaybackPresenter,
                 mBlockContactPresenter,
                 isShowingRecentsTab);
-        areDeepLinkEnabled();
     }
 
     /** Called by the CallLogQueryHandler when the list of calls has been fetched or updated. */
@@ -343,7 +347,7 @@ public class CallLogFragment extends Fragment implements CallLogQueryHandler.Lis
                 }
             }
         });
-
+        areDeepLinksEnabled();
         fetchCalls();
         return view;
     }
@@ -383,8 +387,7 @@ public class CallLogFragment extends Fragment implements CallLogQueryHandler.Lis
             refreshData();
             mAdapter.startCache();
         }
-
-        areDeepLinkEnabled();
+        areDeepLinksEnabled();
     }
 
     @Override
@@ -418,6 +421,8 @@ public class CallLogFragment extends Fragment implements CallLogQueryHandler.Lis
         getActivity().getContentResolver().unregisterContentObserver(mCallLogObserver);
         getActivity().getContentResolver().unregisterContentObserver(mContactsObserver);
         getActivity().getContentResolver().unregisterContentObserver(mVoicemailStatusObserver);
+        mLookupProvider.unregisterStatusCallback(this);
+        LookupProviderImpl.INSTANCE.release();
         super.onDestroy();
     }
 
@@ -433,6 +438,12 @@ public class CallLogFragment extends Fragment implements CallLogQueryHandler.Lis
         if (mVoicemailPlaybackPresenter != null) {
             mVoicemailPlaybackPresenter.onSaveInstanceState(outState);
         }
+    }
+
+    @Override
+    public void onStatusChanged(boolean enabled) {
+        mRefreshDataRequired = true;
+        refreshData();
     }
 
     @Override
@@ -512,7 +523,7 @@ public class CallLogFragment extends Fragment implements CallLogQueryHandler.Lis
         }
     }
 
-    private void areDeepLinkEnabled() {
+    private void areDeepLinksEnabled() {
         DeepLinkIntegrationManager.getInstance().isApplicationTypeEnabled(
                 DeepLinkApplicationType.NOTE, mDeepLinkEnabledCallback);
     }

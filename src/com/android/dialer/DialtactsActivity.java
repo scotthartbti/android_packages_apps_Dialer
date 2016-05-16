@@ -76,6 +76,7 @@ import com.android.contacts.common.list.OnPhoneNumberPickerActionListener;
 import com.android.contacts.common.util.PermissionsUtil;
 import com.android.contacts.common.widget.FloatingActionButtonController;
 import com.android.contacts.commonbind.analytics.AnalyticsUtil;
+import com.android.dialer.callerinfo.CallerInfoProviderPicker;
 import com.android.dialer.calllog.CallLogActivity;
 import com.android.dialer.calllog.CallLogFragment;
 import com.android.dialer.database.DialerDatabaseHelper;
@@ -334,7 +335,8 @@ public class DialtactsActivity extends TransactionSafeActivity implements View.O
         public void onReceive(Context context, Intent intent) {
             switch (intent.getAction()) {
                 case ConnectivityManager.CONNECTIVITY_ACTION:
-                    if (mSmartDialSearchFragment != null) {
+                    if (mSmartDialSearchFragment != null && mSmartDialSearchFragment.isVisible()
+                            && mInDialpadSearch) {
                         mSmartDialSearchFragment.setupEmptyView();
                     }
                     break;
@@ -358,7 +360,8 @@ public class DialtactsActivity extends TransactionSafeActivity implements View.O
         updateSmartDialDatabase();
         mAvailableProviders.clear();
         CallMethodFilters.removeDisabled(availableCallMethods, mAvailableProviders);
-        if (mSmartDialSearchFragment != null) {
+        if (mSmartDialSearchFragment != null && mSmartDialSearchFragment.isVisible()
+                && mInDialpadSearch) {
             mSmartDialSearchFragment.setAvailableProviders(mAvailableProviders);
         }
 
@@ -640,6 +643,8 @@ public class DialtactsActivity extends TransactionSafeActivity implements View.O
         callStateIntentFilter.addAction(TelephonyIntents.ACTION_SUBINFO_CONTENT_CHANGE);
         callStateIntentFilter.addAction(TelephonyIntents.ACTION_SUBINFO_RECORD_UPDATED);
         registerReceiver(mCallStateReceiver, callStateIntentFilter);
+
+        CallerInfoProviderPicker.onAppLaunched(this);
     }
 
     @Override
@@ -913,6 +918,14 @@ public class DialtactsActivity extends TransactionSafeActivity implements View.O
         AnalyticsUtil.sendScreenView(mDialpadFragment);
         ft.commit();
 
+        if (isInSearchUi()) {
+            if (mInRegularSearch) {
+                mRegularSearchFragment.setupEmptyView();
+            } else {
+                mSmartDialSearchFragment.setupEmptyView();
+            }
+        }
+
         if (animate) {
             mFloatingActionButtonController.scaleOut();
         } else {
@@ -981,9 +994,11 @@ public class DialtactsActivity extends TransactionSafeActivity implements View.O
             if (mInRegularSearch) {
                 mRegularSearchFragment.updateCallCreditInfo();
                 mRegularSearchFragment.updateCoachMarkDrawable();
+                mRegularSearchFragment.setupEmptyView();
             } else {
                 mSmartDialSearchFragment.updateCallCreditInfo();
                 mSmartDialSearchFragment.updateCoachMarkDrawable();
+                mSmartDialSearchFragment.setupEmptyView();
             }
         }
     }
