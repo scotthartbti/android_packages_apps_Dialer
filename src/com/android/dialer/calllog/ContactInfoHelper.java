@@ -38,7 +38,6 @@ import com.android.contacts.common.util.PermissionsUtil;
 import com.android.contacts.common.util.PhoneNumberHelper;
 import com.android.contacts.common.util.UriUtils;
 import com.android.dialer.compat.DialerCompatUtils;
-import com.android.dialer.lookup.LookupCache;
 import com.android.dialer.service.CachedNumberLookupService;
 import com.android.dialer.service.CachedNumberLookupService.CachedContactInfo;
 import com.android.dialer.util.TelecomUtil;
@@ -254,8 +253,6 @@ public class ContactInfoHelper {
         ContactInfo info = lookupContactFromUri(getContactInfoLookupUri(number), isSip);
         if (info != null && info != ContactInfo.EMPTY) {
             info.formattedNumber = formatPhoneNumber(number, null, countryIso);
-        } else if (LookupCache.hasCachedContact(mContext, number)) {
-            info = LookupCache.getCachedContact(mContext, number);
         } else if (mCachedNumberLookupService != null) {
             CachedContactInfo cacheInfo =
                     mCachedNumberLookupService.lookupCachedContactFromNumber(mContext, number);
