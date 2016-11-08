@@ -500,6 +500,8 @@ public class CallLogFragment extends Fragment implements CallLogQueryHandler.Lis
         } else if (filterType == CallLogQueryHandler.CALL_TYPE_ALL) {
             mEmptyListView.setImage(R.drawable.empty_call_log);
             mEmptyListView.setActionLabel(R.string.call_log_all_empty_action);
+        } else {
+            mEmptyListView.setActionLabel(EmptyContentView.NO_LABEL);
         }
     }
 
