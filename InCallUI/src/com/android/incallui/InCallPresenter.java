@@ -24,11 +24,13 @@ import android.content.Context;
 import android.content.Intent;
 
 import android.content.res.Resources;
+import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.preference.PreferenceManager;
 import android.provider.CallLog;
 import android.telecom.DisconnectCause;
 import android.telecom.PhoneAccount;
@@ -80,7 +82,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class InCallPresenter implements CallList.Listener,
         CircularRevealFragment.OnCircularRevealCompleteListener,
-        InCallVideoCallCallbackNotifier.SessionModificationListener {
+        InCallVideoCallCallbackNotifier.SessionModificationListener,
+        AccelerometerListener.ChangeListener {
 
     private static final String EXTRA_FIRST_TIME_SHOWN =
             "com.android.incallui.intent.extra.FIRST_TIME_SHOWN";
@@ -121,6 +124,7 @@ public class InCallPresenter implements CallList.Listener,
     private InCallActivity mInCallActivity;
     private InCallState mInCallState = InCallState.NO_CALLS;
     private ProximitySensor mProximitySensor;
+    private AccelerometerListener mAccelerometerListener;
     private boolean mServiceConnected = false;
     private boolean mAccountSelectionCancelled = false;
     private InCallCameraManager mInCallCameraManager = null;
@@ -338,6 +342,7 @@ public class InCallPresenter implements CallList.Listener,
 
         mProximitySensor = proximitySensor;
         addListener(mProximitySensor);
+        mAccelerometerListener = new AccelerometerListener(context, this);
 
         // dismiss any pending dialogues related to earlier call, which
         // are no longer relevant now.
@@ -691,6 +696,10 @@ public class InCallPresenter implements CallList.Listener,
         newState = startOrFinishUi(newState);
         Log.d(this, "onCallListChange newState changed to " + newState);
 
+        if (!newState.isIncoming() && mAccelerometerListener != null) {
+            mAccelerometerListener.enable(false);
+        }
+
         // Set the new state before announcing it to the world
         Log.i(this, "Phone switching state: " + oldState + " -> " + newState);
         mInCallState = newState;
@@ -723,6 +732,10 @@ public class InCallPresenter implements CallList.Listener,
 
         Log.i(this, "Phone switching state: " + oldState + " -> " + newState);
         mInCallState = newState;
+
+        if (newState.isIncoming() && mAccelerometerListener != null) {
+            mAccelerometerListener.enable(true);
+        }
 
         for (IncomingCallListener listener : mIncomingCallListeners) {
             listener.onIncomingCall(oldState, mInCallState, call);
@@ -774,6 +787,22 @@ public class InCallPresenter implements CallList.Listener,
     @Override
     public void onUpgradeToVideoFail(int error, Call call) {
         //NO-OP
+    }
+
+    public void onOrientationChanged(int orientation) {
+        // ignored
+    }
+
+    @Override
+    public void onDeviceFlipped(boolean faceDown) {
+        if (!faceDown) {
+            return;
+        }
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        if (prefs.getBoolean("button_smart_mute", false)) {
+            getTelecomManager().silenceRinger();
+        }
     }
 
     /**
@@ -1243,6 +1272,9 @@ public class InCallPresenter implements CallList.Listener,
         if (incomingCall != null) {
             TelecomAdapter.getInstance().answerCall(
                     incomingCall.getId(), VideoProfile.STATE_AUDIO_ONLY);
+            if (mAccelerometerListener != null) {
+                mAccelerometerListener.enable(false);
+            }
             return true;
         }
 
@@ -1685,6 +1717,11 @@ public class InCallPresenter implements CallList.Listener,
 
             mWakeLock = null;
             mPowerManager = null;
+
+            if (mAccelerometerListener != null) {
+                mAccelerometerListener.enable(false);
+                mAccelerometerListener = null;
+            }
 
             mAudioModeProvider = null;
 
